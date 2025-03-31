@@ -18,9 +18,6 @@ router.patch('/:id', authMiddleware, taskController.updateTask);
 router.delete('/:id', authMiddleware, taskController.deleteTask);
 
 
-// router.get('/', getTasks);
-// router.put('/:id', updateTask);
-// router.delete('/:id', deleteTask);
 
 
 module.exports = router;

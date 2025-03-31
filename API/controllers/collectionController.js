@@ -3,46 +3,49 @@ const Task = require('../models/Task');
 
 exports.getCollections = async (req, res) => {
   try {
-    const collections = await Collection.find({ user: req.userId });
+    const collections = await Collection.find({ user: req.user._id }).lean();
 
-    const tasks = await Task.find({ user: req.userId });
+    // Optional: add task stats to each collection
+    const populated = await Promise.all(
+      collections.map(async (col) => {
+        const tasks = await Task.find({ collectionId: col._id });
+        const completedTasks = tasks.filter(t => t.completed).length;
 
-    const collectionsWithStats = collections.map((collection) => {
-      const relatedTasks = tasks.filter(t => t.collectionId.toString() === collection._id.toString());
-      const total = relatedTasks.length;
-      const done = relatedTasks.filter(t => t.completed).length;
-      return {
-        ...collection.toObject(),
-        totalTasks: total,
-        completedTasks: done,
-      };
-    });
+        return {
+          ...col,
+          totalTasks: tasks.length,
+          completedTasks,
+        };
+      })
+    );
 
-    res.json(collectionsWithStats);
+    res.json(populated);
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching collections' });
+    console.error('Failed to fetch collections:', err);
+    res.status(500).json({ error: 'Failed to fetch collections' });
   }
 };
 
 
 exports.createCollection = async (req, res) => {
-  const { name } = req.body;
-
-  if (!name || typeof name !== 'string') {
-    return res.status(400).json({ message: 'Collection name is required' });
-  }
-
   try {
-    const newCollection = await Collection.create({
-      name,
-      user: req.userId,
+    console.log('Incoming createCollection request');
+    console.log('req.user:', req.user); // 👈 must not be undefined
+    console.log('req.body:', req.body); // 👈 must include name
+
+    const collection = new Collection({
+      name: req.body.name,
+      user: req.user._id, // ✅ make sure req.user exists and has _id
     });
-    res.status(201).json(newCollection);
+
+    await collection.save();
+    res.status(201).json(collection);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Error creating collection' });
+    console.error('Failed to create collection:', err);
+    res.status(500).json({ error: 'Failed to create collection' });
   }
 };
+
 
 // ✅ Add this to your collection controller
 exports.updateCollection = async (req, res) => {

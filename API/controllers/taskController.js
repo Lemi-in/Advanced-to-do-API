@@ -2,40 +2,40 @@ const Task = require('../models/Task');
 const Collection = require('../models/Collection');
 
 exports.getTasksByCollection = async (req, res) => {
-  try {
-    const tasks = await Task.find({
-      user: req.userId,
-      collectionId: req.params.id,
-    }).sort({ createdAt: -1 });
+  const collectionId = req.params.id;
+  const userId = req.user._id;
 
-    const collection = await Collection.findById(req.params.id);
-    res.json({
-      tasks,
-      collectionName: collection?.name || 'Untitled',
-    });
+  try {
+    const collection = await Collection.findOne({ _id: collectionId, user: userId });
+    if (!collection) {
+      return res.status(404).json({ error: 'Collection not found or not owned by user' });
+    }
+
+    const tasks = await Task.find({ collectionId, user: userId });
+    res.json({ tasks, collectionName: collection.name });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch tasks' });
+    console.error('Error in getTasksByCollection:', err);
+    res.status(500).json({ error: 'Failed to fetch tasks' });
   }
 };
 
+// PATCH /api/tasks/:id/toggle
 exports.toggleTaskCompletion = async (req, res) => {
   try {
-    const task = await Task.findOne({
-      _id: req.params.id,
-      user: req.userId,
-    });
+    const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
 
-    if (!task) return res.status(404).json({ message: 'Task not found' });
+    if (!task) return res.status(404).json({ error: 'Task not found or not owned by user' });
 
     task.completed = !task.completed;
     await task.save();
 
-    res.json(task);
+    res.json({ success: true, task });
   } catch (err) {
-    console.error('Error toggling task:', err);
-    res.status(500).json({ message: 'Failed to toggle task completion' });
+    console.error('Toggle error:', err);
+    res.status(500).json({ error: 'Failed to toggle task completion' });
   }
 };
+
 
 // exports.deleteTask = async (req, res) => {
 //   try {
@@ -61,34 +61,31 @@ exports.toggleTaskCompletion = async (req, res) => {
 
 // Fetch all tasks for user
 exports.getTasks = async (req, res) => {
-  const tasks = await Task.find({ userId: req.userId });
-  res.json(tasks);
+  const tasks = await Task.find({ collectionId: req.params.id, user: req.user.id });
+
 };
 
 
 exports.createTask = async (req, res) => {
-  const { title, collectionId, parent, dueDate, priority, tags, reminderDate } = req.body;
-
-  if (!title || !collectionId) {
-    return res.status(400).json({ message: 'Title and collectionId are required' });
-  }
-
   try {
-    const newTask = await Task.create({
+    const { title, dueDate, priority, reminderDate, collectionId, parent } = req.body;
+
+    const task = new Task({
       title,
-      user: req.userId,
+      dueDate,
+      priority,
+      reminderDate,
       collectionId,
       parent: parent || null,
-      dueDate: dueDate || null,
-      priority: priority || null,
-      tags: tags || [],
-      reminderDate: reminderDate || null // 👈 This is important
+      user: req.user.id, // ✅ REQUIRED!
     });
 
-    res.status(201).json(newTask);
+    await task.save();
+    console.log(task)
+    res.status(201).json(task);
   } catch (err) {
-    console.error('❌ Error creating task:', err);
-    res.status(500).json({ message: 'Failed to create task' });
+    console.error('Error creating task:', err);
+    res.status(500).json({ error: 'Failed to create task' });
   }
 };
 
