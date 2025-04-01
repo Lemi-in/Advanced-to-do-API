@@ -39,7 +39,6 @@ exports.toggleTaskCompletion = async (req, res) => {
 
 
 
-// Fetch all tasks for user
 exports.getTasks = async (req, res) => {
   const tasks = await Task.find({ collectionId: req.params.id, user: req.user.id });
 
@@ -73,7 +72,7 @@ exports.createTask = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id }, // ✅ FIXED
+      { _id: req.params.id, user: req.user._id }, 
       req.body,
       { new: true }
     );

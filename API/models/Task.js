@@ -8,7 +8,7 @@ const TaskSchema = new mongoose.Schema({
   parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Task', default: null },
   priority: { type: String, enum: ['Low', 'Medium', 'High'], default: null },
   dueDate: { type: Date, default: null },
-  reminderDate: { type: Date, default: null }, // 👈 Add this line
+  reminderDate: { type: Date, default: null }, 
   tags: [{ type: String }]
 }, { timestamps: true });
 

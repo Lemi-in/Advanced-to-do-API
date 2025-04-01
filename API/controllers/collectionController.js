@@ -5,7 +5,7 @@ exports.getCollections = async (req, res) => {
   try {
     const collections = await Collection.find({ user: req.user._id }).lean();
 
-    // Optional: add task stats to each collection
+ 
     const populated = await Promise.all(
       collections.map(async (col) => {
         const tasks = await Task.find({ collectionId: col._id });
@@ -32,7 +32,7 @@ exports.createCollection = async (req, res) => {
 
     const collection = new Collection({
       name: req.body.name,
-      user: req.user._id, // ✅ make sure req.user exists and has _id
+      user: req.user._id, 
     });
 
     await collection.save();
@@ -53,7 +53,7 @@ exports.updateCollection = async (req, res) => {
 
   try {
     const updated = await Collection.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },  // ✅ FIXED HERE
+      { _id: req.params.id, user: req.user._id },  
       { name },
       { new: true }
     );
