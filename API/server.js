@@ -8,10 +8,8 @@ const app = express();
 const collectionRoutes = require('./routes/collections');
 
 
-app.use(cors({
-  origin: 'http://localhost:5173', // ← adjust to your frontend port
-  credentials: true
-}));
+app.use(cors());
+
 dotenv.config();
 app.use(express.json());
 
