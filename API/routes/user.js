@@ -8,6 +8,7 @@ const userController = require('../controllers/userController');
 router.get('/me', authMiddleware, userController.getProfile);
 
 
+
 router.patch('/me', authMiddleware, userController.updateProfile);
 
 module.exports = router;

@@ -19,6 +19,9 @@ mongoose.connect(process.env.DATABASE_URL)
 
 // Mount routes
 app.use('/api/auth', authRoutes);     // register, login, forgot/reset password
+// server.js
+app.use('/api/user', require('./routes/user')); // 👈 this mounts the /me route
+
 app.use('/api/user', userRoutes);     // /me, /me (PATCH)
 app.use('/api/tasks', taskRoutes);
 app.use('/api/collections', collectionRoutes);
