@@ -38,12 +38,12 @@ exports.forgotPassword = async (req, res) => {
     user.resetTokenExpiry = Date.now() + 1000 * 60 * 30; // 30 mins
     await user.save();
   
-    const resetLink = `http://localhost:5173/reset-password/${token}`; // Frontend URL
+    const resetLink = `http://localhost:5173/reset-password/${token}`; 
     try {
       await sendEmail(user.email, 'Reset Password', `Click to reset: ${resetLink}`);
     } catch (err) {
       console.error('Email sending failed:', err.message);
-      // Optional: keep going to avoid crashing
+      
     }
     
   

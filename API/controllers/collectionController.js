@@ -29,9 +29,6 @@ exports.getCollections = async (req, res) => {
 
 exports.createCollection = async (req, res) => {
   try {
-    console.log('Incoming createCollection request');
-    console.log('req.user:', req.user); // 👈 must not be undefined
-    console.log('req.body:', req.body); // 👈 must include name
 
     const collection = new Collection({
       name: req.body.name,
@@ -47,7 +44,6 @@ exports.createCollection = async (req, res) => {
 };
 
 
-// ✅ Add this to your collection controller
 exports.updateCollection = async (req, res) => {
   const { name } = req.body;
 
@@ -57,7 +53,7 @@ exports.updateCollection = async (req, res) => {
 
   try {
     const updated = await Collection.findOneAndUpdate(
-      { _id: req.params.id, user: req.userId },  // ✅ use 'user', not 'userId' if your schema uses 'user'
+      { _id: req.params.id, user: req.user._id },  // ✅ FIXED HERE
       { name },
       { new: true }
     );
@@ -74,15 +70,21 @@ exports.updateCollection = async (req, res) => {
 };
 
 
-
 exports.deleteCollection = async (req, res) => {
   try {
-    await Collection.deleteOne({ _id: req.params.id, user: req.userId });
-    res.json({ message: 'Collection deleted' });
+    const result = await Collection.deleteOne({ _id: req.params.id, user: req.user._id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Collection not found or unauthorized' });
+    }
+
+    res.json({ message: 'Collection deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Error deleting collection' });
+    console.error('Error deleting collection:', err);
+    res.status(500).json({ message: 'Error deleting collection', error: err.message });
   }
 };
+
 
 exports.toggleFavorite = async (req, res) => {
   try {

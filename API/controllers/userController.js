@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 
 exports.getProfile = async (req, res) => {
     try {
-      console.log('req.user in /me:', req.user); // 👈 Log this
+
       const user = await User.findById(req.user.id).select('-password -resetToken -resetTokenExpiry');
       if (!user) return res.status(404).json({ error: 'User not found' });
       res.json(user);
@@ -14,7 +14,7 @@ exports.getProfile = async (req, res) => {
   };
   
 
-// PATCH /api/auth/me
+
 exports.updateProfile = async (req, res) => {
   const { name, theme } = req.body;
   try {

@@ -37,26 +37,6 @@ exports.toggleTaskCompletion = async (req, res) => {
 };
 
 
-// exports.deleteTask = async (req, res) => {
-//   try {
-//     const result = await Task.deleteOne({
-//       _id: req.params.id,
-//       user: req.userId,
-//     });
-//     console.log('🔥 Deleting task ID:', req.params.id, 'User:', req.userId);
-
-//     if (result.deletedCount === 0) {
-//       return res.status(404).json({ message: 'Task not found or not authorized' });
-//     }
-
-//     res.json({ message: 'Task deleted' });
-//   } catch (err) {
-//     console.error('❌ Error deleting task:', err);
-//     res.status(500).json({ message: 'Failed to delete task' });
-//   }
-// };
-
-
 
 
 // Fetch all tasks for user
@@ -77,11 +57,10 @@ exports.createTask = async (req, res) => {
       reminderDate,
       collectionId,
       parent: parent || null,
-      user: req.user.id, // ✅ REQUIRED!
+      user: req.user.id, 
     });
 
     await task.save();
-    console.log(task)
     res.status(201).json(task);
   } catch (err) {
     console.error('Error creating task:', err);
@@ -91,11 +70,10 @@ exports.createTask = async (req, res) => {
 
 
 
-// Update task
 exports.updateTask = async (req, res) => {
   try {
     const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, user: req.userId },
+      { _id: req.params.id, user: req.user._id }, // ✅ FIXED
       req.body,
       { new: true }
     );
@@ -108,7 +86,7 @@ exports.updateTask = async (req, res) => {
 };
 
 
-// Recursive delete for task and subtasks
+
 async function deleteTaskAndChildren(id, userId) {
   const children = await Task.find({ parent: id, user: userId });
   for (const child of children) {
@@ -119,7 +97,12 @@ async function deleteTaskAndChildren(id, userId) {
 
 exports.deleteTask = async (req, res) => {
   try {
-    await deleteTaskAndChildren(req.params.id, req.userId);
+    const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found or not authorized' });
+    }
+
+    await deleteTaskAndChildren(task._id, task.user);
     res.json({ message: 'Task and subtasks deleted' });
   } catch (err) {
     console.error('❌ Error deleting task and subtasks:', err);

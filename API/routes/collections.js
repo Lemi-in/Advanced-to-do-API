@@ -12,6 +12,6 @@ router.get('/', authMiddleware, collectionController.getCollections);
 
 router.delete('/:id', collectionController.deleteCollection);
 router.patch('/:id/favorite', collectionController.toggleFavorite);
-router.patch('/:id', collectionController.updateCollection); // ✅ add this
+router.patch('/:id', collectionController.updateCollection); 
 
 module.exports = router;
